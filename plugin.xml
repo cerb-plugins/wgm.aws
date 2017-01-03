@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.devblocks.com/schema/plugin.xsd">
+	<id>wgm.aws</id>
+	<name>Amazon Web Services (AWS) Integration</name>
+	<description>This plugin provides integration with Amazon Web Services (AWS)</description>
+	<author>Webgroup Media, LLC.</author>
+	<version>0.0.1</version>
+	<link>http://www.cerbweb.com/book/latest/plugins/wgm.aws</link>
+	<image>plugin.png</image>
+ 
+ 	<!-- Requirements -->
+
+	<requires>
+		<app_version min="7.3" max="7.3.99" />
+		<php_extension name="curl" />
+	</requires>
+ 
+	<!-- Plugin Dependencies -->
+	
+	<dependencies>
+		<require plugin_id="cerberusweb.core" version="7.3.0" />
+	</dependencies>
+
+	<!-- Exported Classes -->
+	
+	<class_loader>
+		<!--
+		<file path="api/App.php">
+			<class name="WgmJira_API" />
+		</file>
+		-->
+	</class_loader>
+
+	<!-- Extensions -->
+ 
+	<extensions>
+
+		<!-- Service Providers -->
+		
+		<extension point="cerb.service.provider">
+			<id>wgm.aws.service.provider</id>
+			<name>Amazon Web Services</name>
+			<class>
+				<file>api/App.php</file>
+				<name>ServiceProvider_Aws</name>
+			</class>
+			<params>
+				<param key="contexts">
+					<value>
+						<data key="cerberusweb.contexts.app" />
+						<data key="cerberusweb.contexts.group" />
+						<data key="cerberusweb.contexts.role" />
+						<data key="cerberusweb.contexts.worker" />
+					</value>
+				</param>
+			</params>
+		</extension>
+		
+		<!-- Bot actions -->
+		
+		<!-- Move to AWS plugin -->
+		<extension point="devblocks.event.action">
+			<id>wgm.aws.bot.action.get_presigned_url</id>
+			<name>Get Pre-signed URL for AWS</name>
+			<class>
+				<file>api/App.php</file>
+				<name>BotAction_AwsGetPresignedUrl</name>
+			</class>
+			<params>
+				<param key="label" value="Get Pre-signed URL for AWS" />
+				<param key="events">
+					<value>
+						<data key="*" />
+					</value>
+				</param>
+			</params>
+		</extension>
+
+	</extensions>
+</plugin>
