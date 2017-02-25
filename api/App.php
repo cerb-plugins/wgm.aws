@@ -188,7 +188,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 			;
 		
 		$credential_scope = sprintf("%s/%s/%s/aws4_request",
-			date("Ymd"),
+			gmdate("Ymd"),
 			$region,
 			$service
 		);
@@ -201,7 +201,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 			;
 		
 		$secret = $credentials['secret_key'];
-		$hash_date = hash_hmac('sha256', date('Ymd'), 'AWS4' . $secret, true);
+		$hash_date = hash_hmac('sha256', gmdate('Ymd'), 'AWS4' . $secret, true);
 		$hash_region = hash_hmac('sha256', $region, $hash_date, true);
 		$hash_service = hash_hmac('sha256', $service, $hash_region, true);
 		$hash_signing = hash_hmac('sha256', 'aws4_request', $hash_service, true);
