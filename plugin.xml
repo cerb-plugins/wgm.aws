@@ -4,14 +4,14 @@
 	<name>Amazon Web Services (AWS) Integration</name>
 	<description>This plugin provides integration with Amazon Web Services (AWS)</description>
 	<author>Webgroup Media, LLC.</author>
-	<version>0.0.2</version>
+	<version>0.0.3</version>
 	<link>http://www.cerbweb.com/book/latest/plugins/wgm.aws</link>
 	<image>plugin.png</image>
  
  	<!-- Requirements -->
 
 	<requires>
-		<app_version min="7.3" max="7.3.99" />
+		<app_version min="7.3.4" max="7.3.99" />
 		<php_extension name="curl" />
 	</requires>
  

@@ -111,7 +111,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		
 		foreach($headers as $header) {
 			@list($key, $val) = explode(':', $header, 2);
-			$canonical_headers .= strtolower(trim($key)) . ':' . trim($val) . "\n";
+			$canonical_headers .= DevblocksPlatform::strLower(trim($key)) . ':' . trim($val) . "\n";
 		}
 		
 		return $canonical_headers;
@@ -122,7 +122,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		
 		foreach($headers as $header) {
 			@list($key, $val) = explode(':', $header, 2);
-			$signed_headers[] = strtolower(trim($key));
+			$signed_headers[] = DevblocksPlatform::strLower(trim($key));
 		}
 		
 		sort($signed_headers, SORT_STRING | SORT_FLAG_CASE);
@@ -148,7 +148,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$header_keys = [];
 		foreach($headers as $header) {
 			list($key, $val) = explode(':', $header, 2);
-			$header_keys[strtolower(trim($key))] = true;
+			$header_keys[DevblocksPlatform::strLower(trim($key))] = true;
 		}
 		
 		if(!isset($header_keys['x-amz-date']))
@@ -162,8 +162,8 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$service = $region = null;
 		
 		if(preg_match('#^(.*?)\.(.*?)\.amazonaws\.com$#', $url_parts['host'], $matches)) {
-			$service = strtolower($matches[1]);
-			$region = strtolower($matches[2]);
+			$service = DevblocksPlatform::strLower($matches[1]);
+			$region = DevblocksPlatform::strLower($matches[2]);
 			
 		} else if(preg_match('#^(.*?)\.amazonaws\.com$#', $url_parts['host'], $matches)) {
 			$service = $matches[1];
@@ -179,12 +179,12 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$signed_headers = $this->_createSignedHeaders($headers);
 		
 		$canonical_string = 
-			strtoupper($verb) . "\n" .
+			DevblocksPlatform::strUpper($verb) . "\n" .
 			$canonical_path . "\n" .
 			$canonical_query . "\n" .
 			$canonical_headers . "\n" .
 			$signed_headers . "\n" .
-			strtolower(hash('sha256', $body))
+			DevblocksPlatform::strLower(hash('sha256', $body))
 			;
 		
 		$credential_scope = sprintf("%s/%s/%s/aws4_request",
@@ -192,12 +192,12 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 			$region,
 			$service
 		);
-			
+		
 		$string_to_sign = 
 			'AWS4-HMAC-SHA256' . "\n" .
 			$date_iso_8601 . "\n" .
 			$credential_scope . "\n" .
-			strtolower(hash('sha256', $canonical_string))
+			DevblocksPlatform::strLower(hash('sha256', $canonical_string))
 			;
 		
 		$secret = $credentials['secret_key'];
@@ -219,6 +219,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		return true;
 	}
 	
+	// [TODO] Check privs
 	function generatePresignedUrl(Model_ConnectedAccount $account, $ch, $verb, $url, $body, $headers, $expires_secs=300) {
 		$credentials = $account->decryptParams();
 		
@@ -244,8 +245,8 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$service = $region = null;
 		
 		if(preg_match('#^(.*?)\.(.*?)\.amazonaws\.com$#', $url_parts['host'], $matches)) {
-			$service = strtolower($matches[1]);
-			$region = strtolower($matches[2]);
+			$service = DevblocksPlatform::strLower($matches[1]);
+			$region = DevblocksPlatform::strLower($matches[2]);
 			
 		} else if(preg_match('#^(.*?)\.amazonaws\.com$#', $url_parts['host'], $matches)) {
 			$service = $matches[1];
@@ -295,19 +296,19 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$canonical_query = $this->_createCanonicalQueryString($url_parts);
 		
 		$canonical_string = 
-			strtoupper($verb) . "\n" .
+			DevblocksPlatform::strUpper($verb) . "\n" .
 			$canonical_path . "\n" .
 			$canonical_query . "\n" .
 			$canonical_headers . "\n" .
 			$signed_headers . "\n" .
-			strtolower(hash('sha256', ''))
+			DevblocksPlatform::strLower(hash('sha256', ''))
 			;
 		
 		$string_to_sign = 
 			'AWS4-HMAC-SHA256' . "\n" .
 			$date_iso_8601 . "\n" .
 			$credential_scope . "\n" .
-			strtolower(hash('sha256', $canonical_string))
+			DevblocksPlatform::strLower(hash('sha256', $canonical_string))
 			;
 		
 		$secret = $credentials['secret_key'];
@@ -388,6 +389,7 @@ class BotAction_AwsGetPresignedUrl extends Extension_DevblocksEventAction {
 		
 		$this->run($token, $trigger, $params, $dict);
 		
+		// [TODO] Handle errors
 		$signed_url = $dict->$response_placeholder;
 		
 		$out .= $signed_url . "\n";
@@ -432,7 +434,7 @@ class BotAction_AwsGetPresignedUrl extends Extension_DevblocksEventAction {
 		
 		$ch = DevblocksPlatform::curlInit($url);
 		
-		switch(strtolower($verb)) {
+		switch(DevblocksPlatform::strLower($verb)) {
 			case 'get':
 				break;
 				
@@ -454,6 +456,9 @@ class BotAction_AwsGetPresignedUrl extends Extension_DevblocksEventAction {
 
 		if(false == ($connected_account = DAO_ConnectedAccount::get($connected_account_id)))
 			return false;
+		
+		// [TODO] Make sure we're authorized to use this connected account
+		//if(false == (Context_ConnectedAccount::isReadableByActor($models, $actor)))
 		
 		$aws = new ServiceProvider_Aws();
 		$signed_url = $aws->generatePresignedUrl($connected_account, $ch, $verb, $url, $body, $headers, $expires_secs);
