@@ -1,43 +1,31 @@
 <?php
-class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceProvider_HttpRequestSigner, IServiceProvider_Popup {
+class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceProvider_HttpRequestSigner {
 	const ID = 'wgm.aws.service.provider';
 	
-	function renderPopup() {
-		$this->_renderPopupAuthForm();
-	}
-	
-	function renderAuthForm() {
-		@$view_id = DevblocksPlatform::importGPC($_REQUEST['view_id'], 'string', '');
-		
+	function renderConfigForm(Model_ConnectedAccount $account) {
 		$tpl = DevblocksPlatform::getTemplateService();
+		$active_worker = CerberusApplication::getActiveWorker();
 		
-		$tpl->assign('view_id', $view_id);
+		$params = $account->decryptParams($active_worker);
+		$tpl->assign('params', $params);
 		
-		$tpl->display('devblocks:wgm.aws::providers/setup.tpl');
+		$tpl->display('devblocks:wgm.aws::providers/edit_params.tpl');
 	}
 	
-	function saveAuthFormAndReturnJson() {
-		@$params = DevblocksPlatform::importGPC($_POST['params'], 'array', array());
+	function saveConfigForm(Model_ConnectedAccount $account, array &$params) {
+		@$edit_params = DevblocksPlatform::importGPC($_POST['params'], 'array', array());
 		
 		$active_worker = CerberusApplication::getActiveWorker();
 		$encrypt = DevblocksPlatform::getEncryptionService();
 		
-		if(!isset($params['access_key']) || empty($params['access_key']))
-			return json_encode(array('status' => false, 'error' => "The 'Access Key ID' is required."));
+		if(!isset($edit_params['access_key']) || empty($edit_params['access_key']))
+			return "The 'Access Key ID' is required.";
 		
-		if(!isset($params['secret_key']) || empty($params['secret_key']))
-			return json_encode(array('status' => false, 'error' => "The 'Secret Access Key' is required."));
+		if(!isset($edit_params['secret_key']) || empty($edit_params['secret_key']))
+			return "The 'Secret Access Key' is required.";
 		
-		$account = new Model_ConnectedAccount();
 		$account->id = 0;
-		$account->name = $params['name'];
-		$account->owner_context = CerberusContexts::CONTEXT_WORKER;
-		$account->owner_context_id = $active_worker->id;
-		$account->extension_id = ServiceProvider_Aws::ID;
-		$account->params_json_encrypted = $encrypt->encrypt(json_encode(array(
-			'access_key' => $params['access_key'],
-			'secret_key' => $params['secret_key'],
-		)));
+		$account->params_json_encrypted = $encrypt->encrypt(json_encode($edit_params));
 		
 		$verb = 'GET';
 		$url = 'https://iam.amazonaws.com/?Action=GetUser&Version=2010-05-08';
@@ -52,7 +40,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$info = curl_getinfo($ch);
 		
 		if($info['http_code'] != 200) {
-			return json_encode(array('status' => false, 'error' => 'Failed to test iam::GetUser'));
+			return 'Failed to test iam::GetUser';
 		}
 		
 		$doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
@@ -61,21 +49,12 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		@$user_id = $json['GetUserResult']['User']['UserId'];
 		
 		if(!$user_id)
-			return json_encode(array('status' => false, 'error' => 'Failed to test iam::GetUser'));
+			return 'Failed to test iam::GetUser';
 		
-		@$name = $params['name'] ?: $params['access_key'];
-		unset($params['name']);
-		
-		$id = DAO_ConnectedAccount::create(array(
-			DAO_ConnectedAccount::NAME => sprintf('AWS: %s', $name),
-			DAO_ConnectedAccount::EXTENSION_ID => ServiceProvider_Aws::ID,
-			DAO_ConnectedAccount::OWNER_CONTEXT => CerberusContexts::CONTEXT_WORKER,
-			DAO_ConnectedAccount::OWNER_CONTEXT_ID => $active_worker->id,
-		));
-		
-		DAO_ConnectedAccount::setAndEncryptParams($id, $params);
-		
-		return json_encode(array('status' => true, 'id' => $id));
+		foreach($edit_params as $k => $v)
+			$params[$k] = $v;
+			
+		return true;
 	}
 	
 	private function _createCanonicalPath($url_parts) {
