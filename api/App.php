@@ -71,7 +71,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		$query = @$url_parts['query'] ?: '';
 		$query_parts = [];
 		$canonical_query = '';
-		parse_str($query, $query_parts);
+		$query_parts = DevblocksPlatform::strParseQueryString($query);
 		
 		ksort($query_parts, SORT_STRING);
 		
