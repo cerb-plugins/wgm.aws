@@ -3,7 +3,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 	const ID = 'wgm.aws.service.provider';
 	
 	function renderConfigForm(Model_ConnectedAccount $account) {
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		$active_worker = CerberusApplication::getActiveWorker();
 		
 		$params = $account->decryptParams($active_worker);
@@ -16,7 +16,7 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		@$edit_params = DevblocksPlatform::importGPC($_POST['params'], 'array', array());
 		
 		$active_worker = CerberusApplication::getActiveWorker();
-		$encrypt = DevblocksPlatform::getEncryptionService();
+		$encrypt = DevblocksPlatform::services()->encryption();
 		
 		if(!isset($edit_params['access_key']) || empty($edit_params['access_key']))
 			return "The 'Access Key ID' is required.";
@@ -312,7 +312,7 @@ class BotAction_AwsGetPresignedUrl extends Extension_DevblocksEventAction {
 	const ID = 'wgm.aws.bot.action.get_presigned_url';
 	
 	function render(Extension_DevblocksEvent $event, Model_TriggerEvent $trigger, $params=array(), $seq=null) {
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		$tpl->assign('params', $params);
 		
 		$active_worker = CerberusApplication::getActiveWorker();
@@ -327,7 +327,7 @@ class BotAction_AwsGetPresignedUrl extends Extension_DevblocksEventAction {
 	}
 	
 	function simulate($token, Model_TriggerEvent $trigger, $params, DevblocksDictionaryDelegate $dict) {
-		$tpl_builder = DevblocksPlatform::getTemplateBuilder();
+		$tpl_builder = DevblocksPlatform::services()->templateBuilder();
 		
 		$out = null;
 		
@@ -383,7 +383,7 @@ class BotAction_AwsGetPresignedUrl extends Extension_DevblocksEventAction {
 	}
 	
 	function run($token, Model_TriggerEvent $trigger, $params, DevblocksDictionaryDelegate $dict) {
-		$tpl_builder = DevblocksPlatform::getTemplateBuilder();
+		$tpl_builder = DevblocksPlatform::services()->templateBuilder();
 
 		@$http_verb = $params['http_verb'];
 		@$http_url = $tpl_builder->build($params['http_url'], $dict);
