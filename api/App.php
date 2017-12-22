@@ -69,16 +69,12 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 	
 	private function _createCanonicalQueryString($url_parts) {
 		$query = @$url_parts['query'] ?: '';
-		$query_parts = [];
 		$canonical_query = '';
 		$query_parts = DevblocksPlatform::strParseQueryString($query);
 		
 		ksort($query_parts, SORT_STRING);
 		
-		foreach($query_parts as $key => $part)
-			$canonical_query .= $key . '=' . rawurlencode($part) . '&';
-		
-		$canonical_query = rtrim($canonical_query, '&');
+		$canonical_query = http_build_query($query_parts, null, '&', PHP_QUERY_RFC3986);
 		
 		return $canonical_query;
 	}
