@@ -47,8 +47,7 @@
 
 <script type="text/javascript">
 $(function() {
-	var $action = $('fieldset#{$namePrefix}');
-	$action.find('textarea').autosize();
+	var $action = $('#{$namePrefix}_{$nonce}');
 	
 	$action.find('select.cerb-httprequest-verb').change(function() {
 		var $container = $(this).closest('fieldset');
@@ -56,7 +55,7 @@ $(function() {
 		var val = $(this).val();
 		
 		if(val == 'post' || val == 'put')
-			$div_httpbody.show().find('textarea').autosize();
+			$div_httpbody.show();
 		else
 			$div_httpbody.fadeOut();
 	});
