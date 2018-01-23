@@ -118,12 +118,21 @@ class ServiceProvider_Aws extends Extension_ServiceProvider implements IServiceP
 		if(false == ($url_parts = parse_url($url)))
 			return false;
 		
+		// Generate a current timestamp in case we weren't given one
 		$date_iso_8601 = gmdate('Ymd\THis\Z');
 			
 		$header_keys = [];
 		foreach($headers as $header) {
 			list($key, $val) = explode(':', $header, 2);
-			$header_keys[DevblocksPlatform::strLower(trim($key))] = true;
+			$header_key = DevblocksPlatform::strLower(trim($key));
+			$header_keys[$header_key] = true;
+			
+			switch($header_key) {
+				// If we have an X-AMZ-Date header, use it instead of generating one
+				case 'x-amz-date':
+					$date_iso_8601 = trim($val);
+					break;
+			}
 		}
 		
 		if(!isset($header_keys['x-amz-date']))
